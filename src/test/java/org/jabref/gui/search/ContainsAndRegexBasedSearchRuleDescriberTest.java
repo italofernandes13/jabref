@@ -15,6 +15,11 @@ import org.jabref.testutils.category.GUITest;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
@@ -94,5 +99,39 @@ class ContainsAndRegexBasedSearchRuleDescriberTest {
         TextFlow description = new ContainsAndRegexBasedSearchRuleDescriber(EnumSet.of(SearchRules.SearchFlags.CASE_SENSITIVE), query).getDescription();
 
         TextFlowEqualityHelper.assertEquals(expectedTexts, description);
+    }
+    
+    import org.jabref.model.entry.BibEntry;
+    import org.jabref.model.entry.field.StandardField;
+    import org.jabref.model.entry.types.StandardEntryType;
+    import org.jabref.model.search.rules.SearchRules;
+    import org.jabref.model.search.rules.SearchRules.SearchFlags;
+    
+    @Test
+    // teste para verificar se a lista da buscar esta vazia
+    // DECISÃO: 276
+    public void testNoMatchesFromEmptyDatabaseWithInvalidSearchExpression() {
+        List<BibEntry> matches = new DatabaseSearcher(INVALID_SEARCH_QUERY, database).getMatches();
+        assertEquals(Collections.emptyList(), matches);
+    }
+
+    @Test
+    // teste para verificar se a lista da buscar é uma regex valida
+    // DECISÃO: 284
+    public void testIsValidQueryAsRegEx() {
+        assertTrue(new SearchQuery("asdf", EnumSet.of(SearchRules.SearchFlags.CASE_SENSITIVE, SearchRules.SearchFlags.REGULAR_EXPRESSION)).isValid());
+    }
+
+    @Test
+    public void testIsMatch() {
+        // teste para verificar se a listar da busca foi encontrada
+        // DECISÃO: 290
+        BibEntry entry = new BibEntry();
+        entry.setType(StandardEntryType.Article);
+        entry.setField(StandardField.AUTHOR, "asdf");
+
+        assertFalse(new SearchQuery("BiblatexEntryType", EnumSet.of(SearchRules.SearchFlags.CASE_SENSITIVE, SearchRules.SearchFlags.REGULAR_EXPRESSION)).isMatch(entry));
+        assertTrue(new SearchQuery("asdf", EnumSet.of(SearchRules.SearchFlags.CASE_SENSITIVE, SearchRules.SearchFlags.REGULAR_EXPRESSION)).isMatch(entry));
+        assertTrue(new SearchQuery("author=asdf", EnumSet.of(SearchRules.SearchFlags.CASE_SENSITIVE, SearchRules.SearchFlags.REGULAR_EXPRESSION)).isMatch(entry));
     }
 }
